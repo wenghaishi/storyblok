@@ -1,21 +1,37 @@
+"use client";
+
 import Image from "next/image";
 import styles from "./page.module.css";
-import { Flex, Spacer, Center, Text, Box, Square} from "@chakra-ui/react";
+import { Flex, Spacer, Center, Text, Box, Square } from "@chakra-ui/react";
+import { prisma } from "@/lib/prisma";
+import {
+  storyblokInit,
+  apiPlugin,
+  getStoryblokApi,
+  storyblokEditable,
+  StoryblokComponent,
+} from "@storyblok/react";
 
-export default function Home() {
+storyblokInit({
+  accessToken: process.env.STORYBLOK_PREVIEW_API,
+  use: [apiPlugin],
+  apiOptions: {
+    region: "eu",
+  },
+});
+
+export default async function Home({ blok }) {
+  const user = await prisma.user.findFirst({
+    where: {
+      email: "test@test.com",
+    },
+  });
+
   return (
-    <main className={styles.main}>
-      <Flex color="white">
-        <Center w="100px" bg="green.500">
-          <Text>Box 1</Text>
-        </Center>
-        <Square bg="blue.500" size="150px">
-          <Text>Box 2</Text>
-        </Square>
-        <Box flex="1" bg="tomato">
-          <Text>Box 3</Text>
-        </Box>
-      </Flex>
+    <main {...storyblokEditable(blok)}>
+      {blok.body.map((nestedBlok) => (
+        <StoryblokComponent blok={nestedBlok} key={nestedBlok._uid} />
+      ))}
     </main>
   );
 }
